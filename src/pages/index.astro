@@ -1,0 +1,21 @@
+---
+// pages/index.astro — 主页
+// 1) Hero
+// 2) Recent writing(最近 3 篇,按日期倒序)
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import ArticleList from '../components/ArticleList.astro';
+
+const allPosts = await getCollection('posts', ({ data }) => !data.draft);
+const recentPosts = allPosts
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 3);
+---
+
+<BaseLayout title="Edward Gao">
+  <Hero
+    sentence="Interested in how complicated things actually work — bureaucracies, historical turning points, decisions no single person made."
+  />
+  <ArticleList posts={recentPosts} />
+</BaseLayout>

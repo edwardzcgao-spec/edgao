@@ -1,0 +1,23 @@
+---
+// ArticleRow.astro
+// 文章列表里的一行:日期 · 标题 · 类型,整行可点击
+interface Props {
+  href: string;
+  date: Date;
+  title: string;
+  kind: 'essay' | 'notes';
+}
+
+const { href, date, title, kind } = Astro.props;
+
+const formattedDate = date.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'short',
+});
+---
+
+<a class="article" href={href}>
+  <span class="article__date">{formattedDate}</span>
+  <h2 class="article__title">{title}</h2>
+  <span class="article__kind">{kind}</span>
+</a>

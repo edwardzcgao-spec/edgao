@@ -1,0 +1,33 @@
+---
+// Hero.astro
+// 主页顶部的 hero 区域:大宣言 + 元信息 + nav
+interface Props {
+  sentence: string;
+  byline?: string;
+  email?: string;
+}
+
+const {
+  sentence,
+  byline = 'Edward Gao · writing from Suzhou',
+  email = 'edward@example.com',
+} = Astro.props;
+---
+
+<section class="hero" data-screen-label="01 Hero">
+  <h1 class="hero__sentence">{sentence}</h1>
+
+  <div class="hero__foot">
+    <p class="hero__meta">{byline}</p>
+    <div class="hero__rule"></div>
+    <nav class="hero__nav" aria-label="Primary">
+      <a href="#writing">writing</a>
+      <span class="dot">·</span>
+      <a href="/notes">notes</a>
+      <span class="dot">·</span>
+      <a href="/about">about</a>
+      <span class="dot">·</span>
+      <a href={`mailto:${email}`}>email</a>
+    </nav>
+  </div>
+</section>

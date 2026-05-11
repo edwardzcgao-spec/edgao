@@ -1,0 +1,15 @@
+---
+// pages/writing.astro — 完整 writing 列表
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ArticleList from '../components/ArticleList.astro';
+
+const allPosts = await getCollection('posts', ({ data }) => !data.draft);
+const sortedPosts = allPosts.sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
+---
+
+<BaseLayout title="Writing — Edward Gao">
+  <ArticleList label="all writing" posts={sortedPosts} />
+</BaseLayout>

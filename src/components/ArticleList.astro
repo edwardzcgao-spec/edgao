@@ -1,0 +1,27 @@
+---
+// ArticleList.astro
+// "recent writing" 整块:标签 + 列表
+import ArticleRow from './ArticleRow.astro';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  label?: string;
+  posts: CollectionEntry<'posts'>[];
+}
+
+const { label = 'recent writing', posts } = Astro.props;
+---
+
+<section class="writing" id="writing" data-screen-label="02 Recent writing">
+  <p class="writing__label">{label}</p>
+  <div class="writing__list">
+    {posts.map((post) => (
+      <ArticleRow
+        href={`/posts/${post.id}`}
+        date={post.data.date}
+        title={post.data.title}
+        kind={post.data.kind}
+      />
+    ))}
+  </div>
+</section>
