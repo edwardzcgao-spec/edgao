@@ -1,0 +1,19 @@
+---
+// pages/notes.astro
+// 只列出 kind === 'notes' 的文章(读书笔记、片段)
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ArticleList from '../components/ArticleList.astro';
+
+const allNotes = await getCollection(
+  'posts',
+  ({ data }) => !data.draft && data.kind === 'notes'
+);
+const sortedNotes = allNotes.sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
+---
+
+<BaseLayout title="Notes — Edward Gao">
+  <ArticleList label="notes" posts={sortedNotes} />
+</BaseLayout>

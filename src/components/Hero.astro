@@ -4,13 +4,11 @@
 interface Props {
   sentence: string;
   byline?: string;
-  email?: string;
 }
 
 const {
   sentence,
   byline = 'Edward Gao · writing from Suzhou',
-  email = 'edward@example.com',
 } = Astro.props;
 ---
 
@@ -26,8 +24,6 @@ const {
       <a href="/notes">notes</a>
       <span class="dot">·</span>
       <a href="/about">about</a>
-      <span class="dot">·</span>
-      <a href={`mailto:${email}`}>email</a>
     </nav>
   </div>
 </section>
