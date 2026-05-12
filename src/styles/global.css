@@ -333,3 +333,22 @@ html, body {
 .backlinks__list a:hover {
   border-bottom-color: var(--ink);
 }
+
+/* 文章正文里的图片 */
+.prose__body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 2.5em auto;
+  border-radius: 2px;
+}
+
+/* 独占一段的图片,在大屏上突破正文列宽(Anthropic 风格)*/
+@media (min-width: 880px) {
+  .prose__body p:has(> img:only-child) {
+    position: relative;
+    width: min(880px, calc(100vw - 48px));
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
