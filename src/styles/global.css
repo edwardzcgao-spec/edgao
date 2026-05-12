@@ -230,6 +230,33 @@ html, body {
   margin-top: 0;
 }
 
+/* Inline emphasis */
+.prose__body em,
+.prose__body i {
+  font-style: italic;
+  letter-spacing: 0.005em;
+}
+
+.prose__body strong,
+.prose__body b {
+  font-weight: 600;
+}
+
+.prose__body mark {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    transparent 18%,
+    rgba(245, 220, 130, 0.55) 18%,
+    rgba(245, 220, 130, 0.55) 92%,
+    transparent 92%
+  );
+  color: inherit;
+  padding: 0 1px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
 .prose__body a {
   color: var(--ink);
   text-decoration: underline;

@@ -158,6 +158,8 @@ def main():
             item['body'], item['slug'], str(title),
             filename_to_slug, backlinks, unresolved,
         )
+        # Obsidian ==highlight== → <mark>highlight</mark>
+        new_body = re.sub(r'==(.+?)==', r'<mark>\1</mark>', new_body)
         transformed.append({**item, 'new_body': new_body, 'title': str(title)})
 
     if unresolved:

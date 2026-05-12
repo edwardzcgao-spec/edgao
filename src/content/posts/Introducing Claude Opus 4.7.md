@@ -72,3 +72,5 @@ Score on an internal agentic coding evaluation as a function of token usage at e
 - SWE-bench Multimodal: We used an internal implementation for both Opus 4.7 and Opus 4.6. Scores are not directly comparable to public leaderboard scores.
 
 May 4, 2026: Updated *Document reasoning* graph to reflect updated OfficeQA Pro scores for Opus 4.7.
+
+这是一句普通文字,其中 <mark>这部分应该高光</mark> 而后面是普通。
