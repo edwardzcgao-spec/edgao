@@ -2,6 +2,7 @@
 title: "On the slow machinery of municipal water"
 date: 2026-04-15
 kind: essay
+publish: true
 description: "Why water systems break in ways that look sudden but aren't."
 ---
 

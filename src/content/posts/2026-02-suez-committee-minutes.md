@@ -2,6 +2,7 @@
 title: "Reading the 1956 Suez crisis in committee minutes"
 date: 2026-02-20
 kind: notes
+publish: true
 description: "What the British cabinet minutes show that the memoirs don't."
 ---
 

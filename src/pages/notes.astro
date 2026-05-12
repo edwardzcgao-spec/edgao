@@ -7,7 +7,7 @@ import ArticleList from '../components/ArticleList.astro';
 
 const allNotes = await getCollection(
   'posts',
-  ({ data }) => !data.draft && data.kind === 'notes'
+  ({ data }) => data.publish && data.kind === 'notes'
 );
 const sortedNotes = allNotes.sort(
   (a, b) => b.data.date.getTime() - a.data.date.getTime()
