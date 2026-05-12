@@ -5,6 +5,9 @@ tags:
   - concept
   - seeing-like-a-state
 publish: true
+title: Standardization
+date: 2026-05-12
+kind: notes
 ---
 
 # Standardization
