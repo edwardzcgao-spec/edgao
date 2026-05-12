@@ -1,16 +1,10 @@
 ---
-tags:
-  - TCRCC
-  - Gellner
-  - concept
-  - nationalism
+tags: 
 publish: true
 date: 2026-05-12
 title: Official-Language-Policy
 kind: notes
 ---
-
-
 
 **Definition:** Official language policies are state projects to impose a single standardized language across diverse linguistic populations, eliminating dialects, minority languages, and oral traditions. Presented as modernization and national unity, these policies primarily serve state interests in legibility, control, and cultural homogenization—while destroying linguistic diversity, local knowledge, and protective illegibility.
 
@@ -580,12 +574,12 @@ Official language policies transform linguistic diversity into standardized unif
 
 ## Related Concepts
 
-- [[Legibility]] - The goal of linguistic standardization
-- [[State-Simplification]] - The broader process
-- [[Standardization]] - Related mechanism
-- [[Local-Knowledge]] - What is destroyed
-- [[Illegibility-as-Protection]] - What is lost
-- [[Metis]] - Oral knowledge traditions
+- Legibility - The goal of linguistic standardization
+- State-Simplification - The broader process
+- Standardization - Related mechanism
+- Local-Knowledge - What is destroyed
+- Illegibility-as-Protection - What is lost
+- Metis - Oral knowledge traditions
 
 ## Key Quotes
 
@@ -596,13 +590,13 @@ Official language policies transform linguistic diversity into standardized unif
 ## Cross-References
 
 ### Chapters
-- [[Ch02-Cities-People-Language|Chapter 2]] - Official languages and state simplification
-- [[Chapter-9-Metis|Chapter 9]] - Oral traditions and practical knowledge
+- Chapter 2 - Official languages and state simplification
+- Chapter 9 - Oral traditions and practical knowledge
 
 ### Themes
-- [[Illegibility-as-Protection|Illegibility as Protection]]
-- [[Destruction-of-Metis-Through-Standardization|Destruction of Mētis Through Standardization]]
-- [[Scale-and-Governance|Scale and Governance]]
+- Illegibility as Protection
+- Destruction of Mētis Through Standardization
+- Scale and Governance
 
 ---
 

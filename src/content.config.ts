@@ -10,6 +10,10 @@ const posts = defineCollection({
     description: z.string().optional(),
     publish: z.boolean().default(false),
     slug: z.string().optional(),
+    incoming_links: z.array(z.object({
+      slug: z.string(),
+      title: z.string(),
+    })).optional(),
   }),
 });
 

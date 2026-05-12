@@ -1,21 +1,25 @@
 ---
-// PostLayout.astro
-// 单篇文章页:沿用 BaseLayout,加上 prose 容器
 import BaseLayout from './BaseLayout.astro';
 
 interface Props {
   title: string;
   date: Date;
-  kind: 'essay' | 'notes';
+  kind: 'essay' | 'notes' | 'home';
   description?: string;
+  incomingLinks?: Array<{ slug: string; title: string }>;
 }
 
-const { title, date, kind, description } = Astro.props;
+const { title, date, kind, description, incomingLinks = [] } = Astro.props;
 
 const formattedDate = date.toLocaleDateString('en-US', {
   year: 'numeric',
   month: 'short',
 });
+
+// Cap at 10, dedupe by slug
+const uniqueBacklinks = Array.from(
+  new Map(incomingLinks.map(l => [l.slug, l])).values()
+).slice(0, 10);
 ---
 
 <BaseLayout title={`${title} — Edward Gao`} description={description}>
@@ -28,6 +32,20 @@ const formattedDate = date.toLocaleDateString('en-US', {
     <div class="prose__body">
       <slot />
     </div>
+
+    {uniqueBacklinks.length > 0 && (
+      <aside class="backlinks">
+        <h2 class="backlinks__heading">linked from</h2>
+        <ul class="backlinks__list">
+          {uniqueBacklinks.map(link => (
+            <li>
+              <a href={`/posts/${link.slug}`}>{link.title}</a>
+            </li>
+          ))}
+        </ul>
+      </aside>
+    )}
+
     <a href="/" class="prose__back">← back</a>
   </article>
 </BaseLayout>

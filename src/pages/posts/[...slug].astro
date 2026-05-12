@@ -1,11 +1,12 @@
 ---
-// pages/posts/[...slug].astro
-// 为每篇文章生成一个静态页面 /posts/<slug>
 import { getCollection, render } from 'astro:content';
 import PostLayout from '../../layouts/PostLayout.astro';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('posts', ({ data }) => data.publish && data.kind !== 'home');
+  const posts = await getCollection(
+    'posts',
+    ({ data }) => data.publish && data.kind !== 'home'
+  );
   return posts.map((post) => ({
     params: { slug: post.id },
     props: { post },
@@ -21,6 +22,7 @@ const { Content } = await render(post);
   date={post.data.date}
   kind={post.data.kind}
   description={post.data.description}
+  incomingLinks={post.data.incoming_links}
 >
   <Content />
 </PostLayout>

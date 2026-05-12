@@ -1,9 +1,9 @@
 ---
-title: "What a budget is, when no one is in charge of it"
+title: What a budget is, when no one is in charge of it
 date: 2025-12-08
 kind: essay
 publish: true
-description: "Distributed authorship and the limits of intentional design."
+description: Distributed authorship and the limits of intentional design.
 ---
 
 > 占位文本 · 用你的 essay 替换。

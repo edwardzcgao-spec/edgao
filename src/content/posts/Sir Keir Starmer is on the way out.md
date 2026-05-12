@@ -1,17 +1,16 @@
 ---
 title: Sir Keir Starmer is on the way out
-source: https://www.economist.com/britain/2026/05/12/sir-keir-starmer-is-on-the-way-out
-author:
-  - "[[The Economist]]"
+source: "https://www.economist.com/britain/2026/05/12/sir-keir-starmer-is-on-the-way-out"
+author: 
 published: 2026-05-12
 created: 2026-05-12
 description: Pity his successor  | Britain
-tags:
-  - clippings
+tags: 
 publish: true
 date: 2026-05-12
 kind: notes
 ---
+
 ## Pity his successor
 
 ![Britain's Prime Minister Keir Starmer arrives for a meeting at Downing Street, London](https://www.economist.com/cdn-cgi/image/width=1424,quality=80,format=auto/content-assets/images/20260516_BRP502.jpg)
