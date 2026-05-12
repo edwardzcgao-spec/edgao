@@ -288,3 +288,8 @@ html, body {
 .prose__back:hover {
   color: var(--ink);
 }
+
+/* 主页 markdown 内容容器——继承 .prose 但顶部 padding 缩小 */
+.prose--home {
+  padding-top: 60px;
+}

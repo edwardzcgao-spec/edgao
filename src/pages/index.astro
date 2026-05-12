@@ -1,21 +1,24 @@
 ---
-// pages/index.astro — 主页
-// 1) Hero
-// 2) Recent writing(最近 3 篇,按日期倒序)
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Hero from '../components/Hero.astro';
-import ArticleList from '../components/ArticleList.astro';
 
-const allPosts = await getCollection('posts', ({ data }) => data.publish);
-const recentPosts = allPosts
-  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
-  .slice(0, 3);
+const homeEntries = await getCollection(
+  'posts',
+  ({ data }) => data.publish && data.kind === 'home'
+);
+const homeEntry = homeEntries[0];
+const Content = homeEntry ? (await render(homeEntry)).Content : null;
 ---
 
 <BaseLayout title="Edward Gao">
-  <Hero
-    sentence="Interested in how complicated things actually work — bureaucracies, historical turning points, decisions no single person made."
-  />
-  <ArticleList posts={recentPosts} />
+  <Hero sentence="Interested in how complicated things actually work — bureaucracies, historical turning points, decisions no single person made." />
+
+  {Content && (
+    <article class="prose prose--home">
+      <div class="prose__body">
+        <Content />
+      </div>
+    </article>
+  )}
 </BaseLayout>
