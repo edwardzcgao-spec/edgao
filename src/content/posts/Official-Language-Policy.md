@@ -4,6 +4,9 @@ publish: true
 date: 2026-05-12
 title: Official-Language-Policy
 kind: notes
+incoming_links:
+  - slug: 111
+    title: "111"
 ---
 
 **Definition:** Official language policies are state projects to impose a single standardized language across diverse linguistic populations, eliminating dialects, minority languages, and oral traditions. Presented as modernization and national unity, these policies primarily serve state interests in legibility, control, and cultural homogenization—while destroying linguistic diversity, local knowledge, and protective illegibility.
