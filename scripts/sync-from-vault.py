@@ -67,8 +67,9 @@ def serialize_frontmatter(fm, incoming_links):
     if incoming_links:
         lines.append('incoming_links:')
         for link in incoming_links:
+            slug_str = str(link['slug']).replace('"', '\\"')
             title_str = str(link['title']).replace('"', '\\"')
-            lines.append(f'  - slug: {link["slug"]}')
+            lines.append(f'  - slug: "{slug_str}"')
             lines.append(f'    title: "{title_str}"')
 
     lines.append('---')

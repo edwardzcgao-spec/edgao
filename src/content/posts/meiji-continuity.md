@@ -3,8 +3,9 @@ title: 文明本质主义的认识论陷阱：从《河殇》到"文明型国家
 kind: essay
 publish: true
 date: 2026-05-12
+slug: meiji-continuity
 incoming_links:
-  - slug: Home
+  - slug: "Home"
     title: "int"
 ---
 
