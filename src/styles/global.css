@@ -10,7 +10,7 @@
 
   /* 字体栈 */
   --font-sans: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-serif: "Newsreader", "Source Serif Pro", "Iowan Old Style", Georgia, serif;
+  --font-serif: "Source Serif 4", "Source Serif Pro", "Iowan Old Style", Georgia, serif;
 }
 
 * { box-sizing: border-box; }
@@ -170,13 +170,20 @@ html, body {
    Prose (单篇文章页) — 在 mockup 没有覆盖,沿用同一调色板
    ========================================================================= */
 .prose {
-  max-width: 680px;
+  max-width: 700px;
   margin: 0 auto;
   padding: 100px 24px 160px;
   font-family: var(--font-serif);
-  font-size: 18px;
-  line-height: 1.8;
+  font-size: 19px;
+  line-height: 1.6;
+  font-weight: 400;
   color: var(--ink);
+  font-optical-sizing: auto;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  text-rendering: optimizeLegibility;
+  letter-spacing: -0.003em;
+  hyphens: auto;
+  -webkit-hyphens: auto;
 }
 
 .prose__header {
@@ -213,23 +220,14 @@ html, body {
 }
 
 .prose__body p {
-  margin: 0 0 1.4em 0;
+  margin: 0 0 1.1em 0;
+  orphans: 2;
+  widows: 2;
+  hanging-punctuation: first last;
 }
 
-.prose__body h2 {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: 24px;
-  margin: 2.2em 0 0.6em;
-  letter-spacing: -0.015em;
-  color: var(--ink);
-}
-
-.prose__body h3 {
-  font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: 18px;
-  margin: 1.6em 0 0.4em;
+.prose__body > p:first-of-type {
+  margin-top: 0;
 }
 
 .prose__body a {
@@ -353,44 +351,12 @@ html, body {
   }
 }
 
-/* 文章正文内所有 heading 统一字体(Manrope sans,与 prose__title 一致) */
-.prose__body h1,
-.prose__body h2,
-.prose__body h3,
-.prose__body h4 {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  color: var(--ink);
-  line-height: 1.3;
-  letter-spacing: -0.005em;
-}
-
-.prose__body h1 {
-  font-size: 32px;
-  margin: 2em 0 0.7em 0;
-}
-
-.prose__body h2 {
-  font-size: 24px;
-  margin: 1.8em 0 0.6em 0;
-}
-
-.prose__body h3 {
-  font-size: 19px;
-  margin: 1.5em 0 0.5em 0;
-}
-
-.prose__body h4 {
-  font-size: 16px;
-  margin: 1.2em 0 0.4em 0;
-}
-
 /* 图片圆角放大到能看出来 */
 .prose__body img {
   border-radius: 8px;
 }
 
-/* 正文内所有 heading 统一为 Newsreader serif(与正文字体一致) */
+/* 正文内所有 heading 统一为 serif(与正文字体一致) */
 .prose__body h1,
 .prose__body h2,
 .prose__body h3,
@@ -408,13 +374,15 @@ html, body {
 }
 
 .prose__body h2 {
-  font-size: 24px;
-  margin: 1.8em 0 0.6em 0;
+  font-size: 26px;
+  margin: 2em 0 0.4em;
+  letter-spacing: -0.005em;
 }
 
 .prose__body h3 {
-  font-size: 20px;
-  margin: 1.5em 0 0.5em 0;
+  font-size: 21px;
+  margin: 1.7em 0 0.3em;
+  letter-spacing: -0.003em;
 }
 
 .prose__body h4 {
