@@ -10,10 +10,15 @@ Phase 2 features:
 
 import sys
 import re
+import shutil
 from pathlib import Path
 
 
-WIKILINK_PATTERN = re.compile(r'\[\[([^\[\]|]+?)(?:\|([^\[\]]+?))?\]\]')
+# Negative lookbehind so this doesn't match the inner `[[...]]` of an `![[image]]` embed.
+WIKILINK_PATTERN = re.compile(r'(?<!!)\[\[([^\[\]|]+?)(?:\|([^\[\]]+?))?\]\]')
+# Obsidian image embed: ![[name.png]] or ![[subfolder/name.png|alt text]]
+IMAGE_EMBED_PATTERN = re.compile(r'!\[\[([^\[\]|]+?)(?:\|([^\[\]]+?))?\]\]')
+IMAGE_EXT_PATTERN = re.compile(r'\.(png|jpe?g|gif|svg|webp)$', re.IGNORECASE)
 
 
 def parse_frontmatter(text):
@@ -76,6 +81,68 @@ def serialize_frontmatter(fm, incoming_links):
     return '\n'.join(lines)
 
 
+def build_image_index(vault):
+    """Walk vault for image files. Returns:
+      by_path:     {vault-relative posix path → absolute Path}
+      by_basename: {lower(filename) → [vault-relative posix paths]} (for bare `![[IMG.png]]`)
+    """
+    by_path = {}
+    by_basename = {}
+    for f in vault.rglob('*'):
+        if not f.is_file():
+            continue
+        if not IMAGE_EXT_PATTERN.search(f.name):
+            continue
+        rel = f.relative_to(vault).as_posix()
+        by_path[rel] = f
+        by_basename.setdefault(f.name.lower(), []).append(rel)
+    return by_path, by_basename
+
+
+def transform_image_embeds(body, source_slug,
+                            by_path, by_basename, public_images_dir,
+                            missing, ambiguous, copied):
+    """Replace ![[file.png]] and ![[file.png|alt]] with ![alt](/images/<vault-rel-path>).
+    Side effect: copies referenced images to public_images_dir mirroring vault structure.
+    Missing images are left as-is (raw `![[...]]` text) and logged."""
+    def repl(match):
+        ref = match.group(1).strip()
+        alt = (match.group(2) or '').strip()
+
+        # 1. Resolve ref → vault-relative path
+        if '/' in ref:
+            rel = ref
+            if rel not in by_path:
+                missing.append((source_slug, ref))
+                return match.group(0)
+        else:
+            matches = by_basename.get(ref.lower(), [])
+            if not matches:
+                missing.append((source_slug, ref))
+                return match.group(0)
+            if len(matches) > 1:
+                ambiguous.append((source_slug, ref, matches))
+            rel = matches[0]
+
+        src = by_path[rel]
+
+        # 2. Copy to public/images/<rel> (mirror vault path)
+        dest = public_images_dir / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        if not dest.exists() or src.stat().st_mtime > dest.stat().st_mtime:
+            shutil.copy2(src, dest)
+            copied.add(rel)
+
+        # 3. Build standard markdown image
+        if not alt:
+            alt = Path(ref).stem
+        # URL-encode spaces minimally (most images are safe; encode space)
+        web_path = '/images/' + rel.replace(' ', '%20')
+        return f'![{alt}]({web_path})'
+
+    return IMAGE_EMBED_PATTERN.sub(repl, body)
+
+
 def transform_wikilinks(body, source_slug, source_title,
                         filename_to_slug, backlinks, unresolved):
     """Replace [[X]] and [[X|Display]] in body. Side effect: populate backlinks/unresolved."""
@@ -112,6 +179,16 @@ def main():
 
     posts.mkdir(parents=True, exist_ok=True)
 
+    # Derive astro project root and public/images/ from posts arg
+    # posts = <astro-root>/src/content/posts  →  astro-root = posts.parent.parent.parent
+    astro_root = posts.parent.parent.parent
+    public_images_dir = astro_root / 'public' / 'images'
+    public_images_dir.mkdir(parents=True, exist_ok=True)
+
+    # Pass 0: index all images in vault (for ![[image]] resolution)
+    by_path, by_basename = build_image_index(vault)
+    print(f"Indexed {len(by_path)} image file(s) in vault.")
+
     # Pass 1: collect all publishable notes; build filename → slug map
     # (excludes kind:home from being a wikilink target — no /posts/<slug> URL)
     publishable = []  # list of dicts
@@ -147,20 +224,52 @@ def main():
 
     print(f"Found {len(publishable)} publishable note(s).")
 
-    # Pass 2: transform wikilinks in bodies; collect backlinks
+    # Pass 2: transform body content — image embeds, wikilinks, highlights
     backlinks = {}
     unresolved = []
+    missing_images = []
+    ambiguous_images = []
+    copied_images = set()
     transformed = []
 
     for item in publishable:
         title = item['fm'].get('title', item['basename'])
+        # 1) Image embeds: ![[file.png]] → ![alt](/images/...) and copy file
+        new_body = transform_image_embeds(
+            item['body'], item['slug'],
+            by_path, by_basename, public_images_dir,
+            missing_images, ambiguous_images, copied_images,
+        )
+        # 2) Note wikilinks: [[Note]] → [Note](/posts/<slug>)
         new_body = transform_wikilinks(
-            item['body'], item['slug'], str(title),
+            new_body, item['slug'], str(title),
             filename_to_slug, backlinks, unresolved,
         )
-        # Obsidian ==highlight== → <mark>highlight</mark>
+        # 3) Obsidian ==highlight== → <mark>highlight</mark>
         new_body = re.sub(r'==(.+?)==', r'<mark>\1</mark>', new_body)
         transformed.append({**item, 'new_body': new_body, 'title': str(title)})
+
+    if copied_images:
+        print(f"Copied/updated {len(copied_images)} image(s) to public/images/.")
+
+    if ambiguous_images:
+        print(f"\n⚠ {len(ambiguous_images)} ambiguous image embed(s) (multiple files share basename, "
+              f"picked first; use ![[subfolder/name.png]] to disambiguate):", file=sys.stderr)
+        for source, ref, matches in ambiguous_images[:10]:
+            print(f"  in '{source}': ![[{ref}]] → {matches[0]}  (also: {', '.join(matches[1:5])})",
+                  file=sys.stderr)
+        if len(ambiguous_images) > 10:
+            print(f"  ... and {len(ambiguous_images) - 10} more", file=sys.stderr)
+        print()
+
+    if missing_images:
+        print(f"\n⚠ {len(missing_images)} image embed(s) not found in vault "
+              f"(left as raw ![[...]] in markdown):", file=sys.stderr)
+        for source, ref in missing_images[:20]:
+            print(f"  in '{source}': ![[{ref}]]", file=sys.stderr)
+        if len(missing_images) > 20:
+            print(f"  ... and {len(missing_images) - 20} more", file=sys.stderr)
+        print()
 
     if unresolved:
         print(f"\n⚠ {len(unresolved)} wikilink(s) target unpublished/missing notes "

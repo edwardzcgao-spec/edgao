@@ -370,3 +370,5 @@ James C. Scott's *Seeing Like a State* provides:
 *This index will be updated as chapter notes, concept notes, and theme notes are completed.*
 
 *Last updated: 2026-02-10*
+
+![d67d55a2bd80a74a8ba10c04e6a2e669](/images/d67d55a2bd80a74a8ba10c04e6a2e669.jpg)
