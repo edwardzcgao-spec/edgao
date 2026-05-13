@@ -1,5 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 // https://docs.astro.build/en/reference/configuration-reference/
 export default defineConfig({
@@ -15,5 +17,9 @@ export default defineConfig({
       },
       wrap: false,
     },
+    // KaTeX:remark-math 解析 $...$ / $$...$$;rehype-katex 渲染为 HTML。
+    // 客户端 CSS 通过 BaseLayout 的 CDN <link> 引入。
+    remarkPlugins: [remarkMath],
+    rehypePlugins: [rehypeKatex],
   },
 });
