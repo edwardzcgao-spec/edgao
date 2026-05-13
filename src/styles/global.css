@@ -739,3 +739,45 @@ html.dark .theme-toggle__moon { display: none; }
     height: 34px;
   }
 }
+
+/* =========================================================================
+   Shiki syntax highlighting — dark mode token swap
+   ----------------------------------------------------------------------------
+   Astro 6 + Shiki dual-theme(vitesse-light / vitesse-dark)输出:
+     - inline `style="color: ...; background-color: ..."` 默认是 light theme
+     - 同时挂上 CSS 变量 `--shiki-dark` / `--shiki-dark-bg` / `--shiki-dark-font-style`
+       / `--shiki-dark-font-weight` / `--shiki-dark-text-decoration`
+   下面这两组规则在 dark 模式下把这些 vars 翻成实际颜色,!important 覆盖 inline style。
+   ========================================================================= */
+
+html.dark .astro-code,
+html.dark .astro-code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+  font-style: var(--shiki-dark-font-style) !important;
+  font-weight: var(--shiki-dark-font-weight) !important;
+  text-decoration: var(--shiki-dark-text-decoration) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not(.light) .astro-code,
+  html:not(.light) .astro-code span {
+    color: var(--shiki-dark) !important;
+    background-color: var(--shiki-dark-bg) !important;
+    font-style: var(--shiki-dark-font-style) !important;
+    font-weight: var(--shiki-dark-font-weight) !important;
+    text-decoration: var(--shiki-dark-text-decoration) !important;
+  }
+}
+
+/* Shiki 输出的 <pre class="astro-code">:保留我们 prose 既有的 padding/radius/font-size/
+   line-height/margin,但让 Shiki 的 background / token color 通过 inline style 生效 */
+.prose__body pre.astro-code {
+  padding: 18px 22px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 14px;
+  line-height: 1.55;
+  margin: 1.4em 0;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
