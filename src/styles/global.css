@@ -2,10 +2,21 @@
    Design tokens — 直接来自 Claude Design mockup
    ========================================================================= */
 :root {
+  /* surfaces */
   --bg: #F0EEE6;
   --ink: #1F1F1E;
   --muted: #6B6964;
   --rule: #D9D6CC;
+
+  /* element-specific (token化,以便深色模式切换) */
+  --code-bg: rgba(0, 0, 0, 0.04);
+  --mark-bg: rgba(245, 220, 130, 0.55);
+  --selection-bg: rgba(245, 220, 130, 0.55);
+  --focus-ring: var(--ink);
+  --kbd-bg: var(--bg);
+  --kbd-shadow: rgba(0, 0, 0, 0.04);
+  --img-filter: none;
+
   --pad-x: clamp(40px, 8vw, 128px);
 
   /* 字体栈 */
@@ -247,8 +258,8 @@ html, body {
     180deg,
     transparent 0%,
     transparent 18%,
-    rgba(245, 220, 130, 0.55) 18%,
-    rgba(245, 220, 130, 0.55) 92%,
+    var(--mark-bg) 18%,
+    var(--mark-bg) 92%,
     transparent 92%
   );
   color: inherit;
@@ -280,13 +291,13 @@ html, body {
 .prose__body code {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 0.88em;
-  background: rgba(0, 0, 0, 0.04);
+  background: var(--code-bg);
   padding: 2px 6px;
   border-radius: 4px;
 }
 
 .prose__body pre {
-  background: rgba(0, 0, 0, 0.04);
+  background: var(--code-bg);
   padding: 18px 22px;
   border-radius: 8px;
   overflow-x: auto;
@@ -365,7 +376,7 @@ html, body {
   max-width: 100%;
   height: auto;
   margin: 2.5em auto;
-  border-radius: 2px;
+  border-radius: 8px;
 }
 
 /* 独占一段的图片,在大屏上突破正文列宽(Anthropic 风格)*/
@@ -376,11 +387,6 @@ html, body {
     left: 50%;
     transform: translateX(-50%);
   }
-}
-
-/* 图片圆角放大到能看出来 */
-.prose__body img {
-  border-radius: 8px;
 }
 
 /* 正文内所有 heading 统一为 serif(与正文字体一致) */
@@ -416,4 +422,320 @@ html, body {
   font-size: 17px;
   margin: 1.2em 0 0.4em 0;
   font-style: italic;
+}
+
+/* =========================================================================
+   Batch B — markdown 元素覆盖 + UX polish
+   ========================================================================= */
+
+/* Lists ------------------------------------------------------------------- */
+.prose__body ul,
+.prose__body ol {
+  padding-left: 1.6em;
+  margin: 1.1em 0;
+}
+
+.prose__body li {
+  margin-bottom: 0.35em;
+}
+
+.prose__body li::marker {
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-feature-settings: "tnum" 1;
+}
+
+.prose__body li ul,
+.prose__body li ol {
+  margin: 0.4em 0 0.2em 0;
+}
+
+.prose__body ul { list-style: disc; }
+.prose__body ul ul { list-style: circle; }
+.prose__body ul ul ul { list-style: square; }
+
+/* Tables ------------------------------------------------------------------ */
+.prose__body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.6em 0;
+  font-size: 0.95em;
+}
+
+.prose__body thead {
+  border-bottom: 2px solid var(--rule);
+}
+
+.prose__body th {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 14px;
+  color: var(--ink);
+  letter-spacing: 0;
+}
+
+.prose__body td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* Horizontal rule --------------------------------------------------------- */
+.prose__body hr {
+  border: 0;
+  height: 1px;
+  background: var(--rule);
+  width: 40%;
+  margin: 3em auto;
+}
+
+/* Footnotes --------------------------------------------------------------- */
+.prose__body sup {
+  line-height: 0;
+  font-size: 0.75em;
+}
+
+.prose__body [data-footnote-ref] {
+  color: var(--muted);
+  text-decoration: none;
+  padding: 0 2px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+}
+
+.prose__body [data-footnote-ref]:hover {
+  color: var(--ink);
+}
+
+.prose__body .footnotes {
+  margin-top: 4em;
+  padding-top: 1.6em;
+  border-top: 1px solid var(--rule);
+  font-size: 0.85em;
+  color: var(--muted);
+}
+
+.prose__body .footnotes ol {
+  padding-left: 1.4em;
+}
+
+.prose__body [data-footnote-backref] {
+  color: var(--muted);
+  text-decoration: none;
+  margin-left: 4px;
+  opacity: 0.6;
+}
+
+.prose__body [data-footnote-backref]:hover {
+  opacity: 1;
+}
+
+/* Definition list --------------------------------------------------------- */
+.prose__body dl {
+  margin: 1.4em 0;
+}
+
+.prose__body dt {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  color: var(--ink);
+  margin-top: 0.8em;
+}
+
+.prose__body dd {
+  margin: 0.2em 0 0.8em 1.4em;
+  color: var(--ink);
+}
+
+/* kbd --------------------------------------------------------------------- */
+.prose__body kbd {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.82em;
+  padding: 1px 6px 2px;
+  border: 1px solid var(--rule);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--kbd-bg);
+  box-shadow: 0 1px 0 var(--kbd-shadow) inset;
+  color: var(--ink);
+}
+
+/* Selection (全站) -------------------------------------------------------- */
+::selection {
+  background: var(--selection-bg);
+  color: var(--ink);
+}
+
+::-moz-selection {
+  background: var(--selection-bg);
+  color: var(--ink);
+}
+
+/* Focus-visible (全站) ---------------------------------------------------- */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.prose__body a:focus-visible {
+  outline-offset: 2px;
+}
+
+/* Mobile prose typography ------------------------------------------------- */
+@media (max-width: 720px) {
+  .prose {
+    padding: 60px 20px 100px;
+    font-size: 17.5px;
+    line-height: 1.6;
+  }
+  .prose__header {
+    margin-bottom: 56px;
+  }
+  .prose__title {
+    font-size: clamp(30px, 7vw, 38px);
+  }
+  .prose__body h2 {
+    font-size: 22px;
+    margin: 1.6em 0 0.4em;
+  }
+  .prose__body h3 {
+    font-size: 19px;
+    margin: 1.4em 0 0.3em;
+  }
+  .prose__body table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .backlinks {
+    margin-top: 56px;
+  }
+}
+
+/* =========================================================================
+   Batch A — 深色模式
+   ========================================================================= */
+
+/* 图片应用主题感知的滤镜(浅色模式下 var 默认 none,无影响) */
+.prose__body img {
+  filter: var(--img-filter);
+}
+
+/* 深色板:跟随系统 prefers-color-scheme */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1B1916;
+    --ink: #E8E5DC;
+    --muted: #95918A;
+    --rule: #3A352D;
+
+    --code-bg: rgba(255, 255, 255, 0.06);
+    --mark-bg: rgba(232, 188, 96, 0.28);
+    --selection-bg: rgba(232, 188, 96, 0.32);
+    --focus-ring: var(--ink);
+    --kbd-bg: #252220;
+    --kbd-shadow: rgba(0, 0, 0, 0.4);
+    --img-filter: brightness(0.88);
+  }
+}
+
+/* 深色板:manual override hook(将来若加 toggle,JS 给 <html> 或 <body> 加 .dark class 即可) */
+.dark {
+  --bg: #1B1916;
+  --ink: #E8E5DC;
+  --muted: #95918A;
+  --rule: #3A352D;
+
+  --code-bg: rgba(255, 255, 255, 0.06);
+  --mark-bg: rgba(232, 188, 96, 0.28);
+  --selection-bg: rgba(232, 188, 96, 0.32);
+  --focus-ring: var(--ink);
+  --kbd-bg: #252220;
+  --kbd-shadow: rgba(0, 0, 0, 0.4);
+  --img-filter: brightness(0.88);
+}
+
+/* 浅色 manual override:让用户在 system=dark 时手动切回浅色生效
+   (必须放在 @media (prefers-color-scheme: dark) 之后才能覆盖) */
+.light {
+  --bg: #F0EEE6;
+  --ink: #1F1F1E;
+  --muted: #6B6964;
+  --rule: #D9D6CC;
+
+  --code-bg: rgba(0, 0, 0, 0.04);
+  --mark-bg: rgba(245, 220, 130, 0.55);
+  --selection-bg: rgba(245, 220, 130, 0.55);
+  --focus-ring: var(--ink);
+  --kbd-bg: var(--bg);
+  --kbd-shadow: rgba(0, 0, 0, 0.04);
+  --img-filter: none;
+}
+
+/* =========================================================================
+   Theme toggle 按钮
+   ========================================================================= */
+.theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  opacity: 0.7;
+  transition:
+    opacity 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.theme-toggle:hover {
+  opacity: 1;
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.theme-toggle:active {
+  transform: scale(0.94);
+}
+
+.theme-toggle__icon {
+  display: block;
+}
+
+/* 默认(浅色):显示 moon(点击 = 切到 dark) */
+.theme-toggle__sun  { display: none; }
+.theme-toggle__moon { display: block; }
+
+/* 深色:显示 sun(点击 = 切回 light) */
+html.dark .theme-toggle__sun  { display: block; }
+html.dark .theme-toggle__moon { display: none; }
+
+/* prefers-color-scheme=dark 且未手动选浅色时也露 sun */
+@media (prefers-color-scheme: dark) {
+  html:not(.light) .theme-toggle__sun  { display: block; }
+  html:not(.light) .theme-toggle__moon { display: none; }
+}
+
+@media (max-width: 720px) {
+  .theme-toggle {
+    top: 14px;
+    right: 14px;
+    width: 34px;
+    height: 34px;
+  }
 }
