@@ -371,3 +371,4 @@ James C. Scott's *Seeing Like a State* provides:
 
 *Last updated: 2026-02-10*
 
+![55eac27398de1efbcc8e5a4136d2ed03](/images/55eac27398de1efbcc8e5a4136d2ed03.jpg)
