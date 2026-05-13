@@ -26,4 +26,4 @@ image = "![[test.png]]"
 
 inline 里的 `[[wikilink]]` 和 `==mark==` 和 `![[img.png]]` 都不应该被替换。
 
-正文里的 Home 应该被处理(Home 存在)。
+正文里的 [Home](/) 应该被处理(Home 存在)。

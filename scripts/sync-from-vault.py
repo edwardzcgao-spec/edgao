@@ -211,8 +211,9 @@ def transform_image_embeds(body, source_slug,
 
 
 def transform_wikilinks(body, source_slug, source_title,
-                        filename_to_slug, backlinks, unresolved):
-    """Replace [[X]] and [[X|Display]] in body. Side effect: populate backlinks/unresolved."""
+                        filename_to_slug, home_filenames, backlinks, unresolved):
+    """Replace [[X]] and [[X|Display]] in body. Side effect: populate backlinks/unresolved.
+    Home notes (kind: home) resolve to '/' (the rendered homepage)."""
     def repl(match):
         target_name = match.group(1).strip()
         display = match.group(2).strip() if match.group(2) else target_name
@@ -225,6 +226,10 @@ def transform_wikilinks(body, source_slug, source_title,
                     'title': source_title,
                 })
             return f'[{display}](/posts/{target_slug})'
+        elif target_lower in home_filenames:
+            # Home note 被渲染为主页 `/`,wikilink 解析为根路径
+            # (不记录 backlink — 主页模板没有 backlinks 区块)
+            return f'[{display}](/)'
         else:
             unresolved.append((source_slug, target_name))
             return display
@@ -327,8 +332,10 @@ def main():
     print(f"Indexed {len(by_path)} image file(s) in vault.")
 
     # Pass 1: collect all publishable notes; build filename → slug map
+    # 普通笔记进 filename_to_slug → /posts/<slug>;home 笔记进 home_filenames → /
     publishable = []
     filename_to_slug = {}
+    home_filenames = set()
 
     for md in vault.rglob('*.md'):
         try:
@@ -349,8 +356,10 @@ def main():
             'basename': basename, 'slug': slug,
         })
 
-        if fm.get('kind') != 'home':
-            basename_lower = basename.lower()
+        basename_lower = basename.lower()
+        if fm.get('kind') == 'home':
+            home_filenames.add(basename_lower)
+        else:
             if basename_lower in filename_to_slug:
                 print(f"⚠ duplicate filename: '{basename}.md' appears multiple times; "
                       f"keeping first", file=sys.stderr)
@@ -381,7 +390,7 @@ def main():
         def wl_xform(text, _slug=slug, _title=str(title)):
             return transform_wikilinks(
                 text, _slug, _title,
-                filename_to_slug, backlinks, unresolved,
+                filename_to_slug, home_filenames, backlinks, unresolved,
             )
 
         def hl_xform(text):
