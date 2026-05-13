@@ -1,0 +1,106 @@
+---
+// 404.astro — editorial not-found 页
+// Astro 静态站会把这个文件 build 成 dist/404.html;
+// Vercel(及 `npx serve dist`)在路径不匹配时自动 fallback 到它。
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Not found — Edward Gao"
+  description="The page you're looking for doesn't exist."
+>
+  <main class="page404">
+    <p class="page404__num">404</p>
+
+    <p class="page404__lead">
+      This page isn't here.<br />
+      It may have been moved, renamed, or never written.
+    </p>
+
+    <nav class="page404__exits" aria-label="404 exits">
+      <a href="/">home</a>
+      <span class="dot" aria-hidden="true">·</span>
+      <a href="/search">search</a>
+      <span class="dot" aria-hidden="true">·</span>
+      <a href="/writing">writing</a>
+    </nav>
+  </main>
+</BaseLayout>
+
+<style>
+  .page404 {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 18vh 24px 24vh;
+    text-align: center;
+    color: var(--ink);
+  }
+
+  .page404__num {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(96px, 14vw, 168px);
+    line-height: 1;
+    color: var(--muted);
+    margin: 0 0 56px 0;
+    letter-spacing: -0.04em;
+    user-select: none;
+  }
+
+  .page404__lead {
+    font-family: var(--font-serif);
+    font-size: clamp(19px, 2vw, 22px);
+    line-height: 1.55;
+    font-weight: 400;
+    color: var(--ink);
+    margin: 0 0 72px 0;
+    letter-spacing: -0.002em;
+  }
+
+  .page404__exits {
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 14px;
+    color: var(--ink);
+  }
+
+  .page404__exits a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--rule);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 0.15s ease;
+  }
+
+  .page404__exits a:hover {
+    text-decoration-color: var(--ink);
+  }
+
+  .page404__exits .dot {
+    color: var(--muted);
+    user-select: none;
+    font-weight: 500;
+  }
+
+  @media (max-width: 720px) {
+    .page404 {
+      padding: 14vh 20px 18vh;
+    }
+    .page404__num {
+      margin-bottom: 40px;
+    }
+    .page404__lead {
+      font-size: 17px;
+      margin-bottom: 48px;
+    }
+    .page404__exits {
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+  }
+</style>
