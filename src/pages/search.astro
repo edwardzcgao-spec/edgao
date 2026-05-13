@@ -1,0 +1,41 @@
+---
+// pages/search.astro — Pagefind 全站搜索
+// 注意:本页面只有在 astro build + pagefind --site dist 之后,生产环境(或 `npx serve dist`)才能工作。
+// dev 模式下 /pagefind/ 目录不存在,搜索 UI 会显示 "Error loading search index" 是预期行为。
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Search — Edward Gao" description="Search Edward Gao's writing and notes.">
+  <article class="prose prose--search">
+    <header class="prose__header">
+      <p class="prose__kind">search</p>
+      <h1 class="prose__title">Search</h1>
+    </header>
+
+    <link rel="stylesheet" href="/pagefind/pagefind-ui.css" />
+    <div id="search" class="pagefind-mount"></div>
+
+    <script src="/pagefind/pagefind-ui.js" is:inline></script>
+    <script is:inline>
+      window.addEventListener('DOMContentLoaded', () => {
+        if (typeof PagefindUI === 'undefined') {
+          var el = document.getElementById('search');
+          if (el) el.innerHTML =
+            '<p style="color: var(--muted); text-align: center; margin-top: 2em;">' +
+            'Search is only available in the production build.<br/>' +
+            'Run <code>npm run build &amp;&amp; npx serve dist</code> to test.' +
+            '</p>';
+          return;
+        }
+        new PagefindUI({
+          element: '#search',
+          showSubResults: true,
+          resetStyles: false,
+          showImages: false,
+        });
+      });
+    </script>
+
+    <a href="/" class="prose__back">← back</a>
+  </article>
+</BaseLayout>

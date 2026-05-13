@@ -823,3 +823,157 @@ html.dark .katex * {
     border-color: var(--ink) !important;
   }
 }
+
+/* =========================================================================
+   Search 入口按钮(BaseLayout 全局),跟 theme-toggle 同风格不同位置
+   ========================================================================= */
+.search-link {
+  position: fixed;
+  top: 20px;
+  right: 66px;
+  z-index: 100;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  text-decoration: none;
+  transition:
+    opacity 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.search-link:hover {
+  opacity: 1;
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.search-link:active {
+  transform: scale(0.94);
+}
+
+@media (max-width: 720px) {
+  .search-link {
+    top: 14px;
+    right: 56px;
+    width: 34px;
+    height: 34px;
+  }
+}
+
+/* =========================================================================
+   Search 页 + Pagefind UI 自定义
+   ----------------------------------------------------------------------------
+   Pagefind 提供 CSS 变量接口(--pagefind-ui-*),映射到我们的 design token 上。
+   ========================================================================= */
+.prose--search {
+  padding-top: 80px;
+}
+
+.pagefind-mount {
+  margin-top: 24px;
+  --pagefind-ui-scale: 0.95;
+  --pagefind-ui-primary: var(--ink);
+  --pagefind-ui-text: var(--ink);
+  --pagefind-ui-background: var(--bg);
+  --pagefind-ui-border: var(--rule);
+  --pagefind-ui-tag: var(--code-bg);
+  --pagefind-ui-border-width: 1px;
+  --pagefind-ui-border-radius: 6px;
+  --pagefind-ui-font: var(--font-sans);
+}
+
+.pagefind-mount .pagefind-ui__search-input {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 14px 18px;
+}
+
+.pagefind-mount .pagefind-ui__search-input:focus,
+.pagefind-mount .pagefind-ui__search-input:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-color: var(--ink);
+}
+
+.pagefind-mount .pagefind-ui__result {
+  border-top: 1px solid var(--rule);
+  padding: 20px 0;
+}
+
+.pagefind-mount .pagefind-ui__result-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  /* Fix 2:拉开标题与下方 excerpt 的距离。Pagefind 默认 margin-bottom: 0,
+     用 .svelte-XXX 双类压制 specificity,故用 !important 覆盖 */
+  margin-bottom: 0.7em !important;
+}
+
+/* Fix 1:所有 result link(含 sub-result nested 链接)默认无 underline,hover 才显示。
+   Pagefind 的 top-level link 自己设 text-decoration: none,但 sub-result nested link 没设,
+   会走浏览器默认 underline——这是多行标题"每行一条横线"的真凶。统一覆盖。 */
+.pagefind-mount .pagefind-ui__result-link {
+  color: var(--ink);
+  text-decoration: none !important;
+  border-bottom: none;
+}
+
+.pagefind-mount .pagefind-ui__result-link:hover {
+  text-decoration: underline !important;
+  text-decoration-color: var(--ink);
+  text-underline-offset: 3px;
+}
+
+.pagefind-mount .pagefind-ui__result-excerpt {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.pagefind-mount .pagefind-ui__result-excerpt mark {
+  background: var(--mark-bg);
+  color: inherit;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.pagefind-mount .pagefind-ui__message,
+.pagefind-mount .pagefind-ui__suppressed,
+.pagefind-mount .pagefind-ui__result-tags {
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
+.pagefind-mount .pagefind-ui__button {
+  font-family: var(--font-sans);
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.pagefind-mount .pagefind-ui__button:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
