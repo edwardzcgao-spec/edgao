@@ -22,6 +22,8 @@ const { Content } = await render(post);
   date={post.data.date}
   kind={post.data.kind}
   description={post.data.description}
+  readingTime={post.data.reading_time}
+  lastModified={post.data.last_modified}
   incomingLinks={post.data.incoming_links}
 >
   <Content />

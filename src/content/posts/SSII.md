@@ -5,6 +5,8 @@ title: Small-States-Independence-Index
 kind: notes
 date: 2026-05-13
 slug: SSII
+reading_time: 12
+last_modified: 2026-05-13
 ---
 
 # Small States Independence Index

@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 """Walk vault, copy publish:true .md files to Astro posts dir.
 
-Phase 2 features:
-- Transform [[Name]] and [[Name|Display]] wikilinks to standard markdown links.
-- Build backlinks index and inject as frontmatter `incoming_links` field.
-- Wikilinks targeting unpublished notes degrade to plain text (no broken links).
-- Wikilinks targeting kind:home notes also degrade (home has no /posts/<slug> URL).
+Features (cumulative):
+- Transform [[Name]] / [[Name|Display]] wikilinks → /posts/<slug>; collect backlinks.
+- Transform ![[file.png]] image embeds → ![alt](/images/<rel>); mirror copy.
+- Transform Obsidian ==text== → <mark>text</mark>.
+- Wave 1 D: inject reading_time (min) and last_modified (ISO date) into output frontmatter.
+- Wave 1 E: move stale images in public/images/ to public/_trash/<timestamp>/ (no rm).
+- Wave 1 F: protect ```fenced``` blocks and `inline` code from all three transforms above.
 """
 
 import sys
 import re
+import math
 import shutil
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -19,6 +23,19 @@ WIKILINK_PATTERN = re.compile(r'(?<!!)\[\[([^\[\]|]+?)(?:\|([^\[\]]+?))?\]\]')
 # Obsidian image embed: ![[name.png]] or ![[subfolder/name.png|alt text]]
 IMAGE_EMBED_PATTERN = re.compile(r'!\[\[([^\[\]|]+?)(?:\|([^\[\]]+?))?\]\]')
 IMAGE_EXT_PATTERN = re.compile(r'\.(png|jpe?g|gif|svg|webp)$', re.IGNORECASE)
+# CJK Unified Ideographs + Extension A (covers 99% of modern Chinese)
+CJK_RE = re.compile(r'[一-鿿㐀-䶿]')
+
+# Phase F:fenced code block(```...```)和 inline code(`...`)的合并 pattern。
+# 顺序很重要——先匹配 fenced(三反引号)再 inline,否则 inline 会先咬走单反引号。
+CODE_SEGMENT_RE = re.compile(
+    r'```[^\n]*\n[\s\S]*?\n```'   # 多行 fenced
+    r'|`[^`\n]+`',                  # 单行 inline,无内部反引号、无换行
+    re.MULTILINE,
+)
+
+# Phase E:在 src/content/posts/*.md 里识别 ![alt](/images/...) 引用
+USED_IMAGE_RE = re.compile(r'!\[[^\]]*\]\((/images/[^)\s]+)\)')
 
 
 def parse_frontmatter(text):
@@ -81,6 +98,59 @@ def serialize_frontmatter(fm, incoming_links):
     return '\n'.join(lines)
 
 
+# ---------------------------------------------------------------------------
+# Phase F: code fence detection
+# ---------------------------------------------------------------------------
+
+def split_by_code(body):
+    """返回 [(kind, text)] 列表,kind in {'code', 'prose'}。
+    Code 包含 fenced ```...``` 和 inline `...`,transform 跳过这些段。"""
+    parts = []
+    last = 0
+    for m in CODE_SEGMENT_RE.finditer(body):
+        if m.start() > last:
+            parts.append(('prose', body[last:m.start()]))
+        parts.append(('code', m.group(0)))
+        last = m.end()
+    if last < len(body):
+        parts.append(('prose', body[last:]))
+    return parts
+
+
+def apply_protecting_code(body, *transform_fns):
+    """顺序跑一组 transform,只对 prose 段应用,code 段原样保留。"""
+    out = []
+    for kind, text in split_by_code(body):
+        if kind == 'prose':
+            for fn in transform_fns:
+                text = fn(text)
+        out.append(text)
+    return ''.join(out)
+
+
+# ---------------------------------------------------------------------------
+# Phase D: reading time + last modified
+# ---------------------------------------------------------------------------
+
+def compute_reading_time(body):
+    """English 200 wpm + Chinese 300 cpm,向上取整,最少 1 分钟。"""
+    cjk_count = len(CJK_RE.findall(body))
+    en_text = CJK_RE.sub(' ', body)
+    en_words = len([w for w in en_text.split() if w])
+    minutes = math.ceil(en_words / 200 + cjk_count / 300)
+    return max(1, minutes)
+
+
+def get_mtime_iso(path):
+    """文件 mtime → ISO 8601 date (YYYY-MM-DD,UTC)。"""
+    ts = path.stat().st_mtime
+    return datetime.fromtimestamp(ts, tz=timezone.utc).date().isoformat()
+
+
+# ---------------------------------------------------------------------------
+# Pass 0: image index
+# ---------------------------------------------------------------------------
+
 def build_image_index(vault):
     """Walk vault for image files. Returns:
       by_path:     {vault-relative posix path → absolute Path}
@@ -99,17 +169,18 @@ def build_image_index(vault):
     return by_path, by_basename
 
 
+# ---------------------------------------------------------------------------
+# Transforms
+# ---------------------------------------------------------------------------
+
 def transform_image_embeds(body, source_slug,
                             by_path, by_basename, public_images_dir,
                             missing, ambiguous, copied):
-    """Replace ![[file.png]] and ![[file.png|alt]] with ![alt](/images/<vault-rel-path>).
-    Side effect: copies referenced images to public_images_dir mirroring vault structure.
-    Missing images are left as-is (raw `![[...]]` text) and logged."""
+    """Replace ![[file.png]] with ![alt](/images/<vault-rel-path>) and copy file."""
     def repl(match):
         ref = match.group(1).strip()
         alt = (match.group(2) or '').strip()
 
-        # 1. Resolve ref → vault-relative path
         if '/' in ref:
             rel = ref
             if rel not in by_path:
@@ -125,18 +196,14 @@ def transform_image_embeds(body, source_slug,
             rel = matches[0]
 
         src = by_path[rel]
-
-        # 2. Copy to public/images/<rel> (mirror vault path)
         dest = public_images_dir / rel
         dest.parent.mkdir(parents=True, exist_ok=True)
         if not dest.exists() or src.stat().st_mtime > dest.stat().st_mtime:
             shutil.copy2(src, dest)
             copied.add(rel)
 
-        # 3. Build standard markdown image
         if not alt:
             alt = Path(ref).stem
-        # URL-encode spaces minimally (most images are safe; encode space)
         web_path = '/images/' + rel.replace(' ', '%20')
         return f'![{alt}]({web_path})'
 
@@ -165,6 +232,78 @@ def transform_wikilinks(body, source_slug, source_title,
     return WIKILINK_PATTERN.sub(repl, body)
 
 
+# ---------------------------------------------------------------------------
+# Phase E: stale image cleanup
+# ---------------------------------------------------------------------------
+
+def cleanup_stale_images(posts_dir, public_images_dir, astro_root):
+    """扫 src/content/posts/*.md 收集所有引用的 /images/... 路径,
+    跟 public/images/ 实际文件 diff,把多余的移到 public/_trash/<timestamp>/。
+    不 rm,人工 review 后再清理。"""
+    if not public_images_dir.exists():
+        return
+
+    used = set()
+    for md in posts_dir.glob('*.md'):
+        try:
+            text = md.read_text(encoding='utf-8')
+        except (UnicodeDecodeError, OSError):
+            continue
+        for m in USED_IMAGE_RE.finditer(text):
+            rel = m.group(1)[len('/images/'):]
+            rel = rel.replace('%20', ' ')
+            used.add(rel)
+
+    stale = []
+    for f in public_images_dir.rglob('*'):
+        if f.is_file():
+            rel = f.relative_to(public_images_dir).as_posix()
+            if rel not in used:
+                stale.append((rel, f))
+
+    if not stale:
+        print("✓ No stale images.")
+        return
+
+    trash_dir = astro_root / 'public' / '_trash' / datetime.now().strftime('%Y%m%d-%H%M%S')
+    for rel, src in stale:
+        dest = trash_dir / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(src), str(dest))
+    print(f"Moved {len(stale)} stale image(s) to {trash_dir.relative_to(astro_root)}/")
+
+
+# ---------------------------------------------------------------------------
+# Phase F: self-test (跑在 main() 之前,失败 abort)
+# ---------------------------------------------------------------------------
+
+def _self_test():
+    sample = (
+        "Prose with [[Note-A]] and ==hi==.\n\n"
+        "```python\n"
+        "x = '[[Note-B]]'\n"
+        "y = '==literal=='\n"
+        "z = '![[image.png]]'\n"
+        "```\n\n"
+        "Inline: `[[Note-C]]` should stay literal.\n"
+    )
+    out = split_by_code(sample)
+    kinds = [k for k, _ in out]
+    assert kinds == ['prose', 'code', 'prose', 'code', 'prose'], \
+        f"split kind sequence mismatch: {kinds}"
+    assert '[[Note-B]]' in out[1][1]
+    assert '==literal==' in out[1][1]
+    assert '![[image.png]]' in out[1][1]
+    assert '[[Note-C]]' in out[3][1]
+
+    # Reading time:200 EN words → 1 min
+    assert compute_reading_time('word ' * 200) == 1
+    # 300 CJK chars → 1 min
+    assert compute_reading_time('字' * 300) == 1
+    # 600 CJK chars → 2 min
+    assert compute_reading_time('字' * 600) == 2
+
+
 def main():
     if len(sys.argv) != 3:
         print(f"Usage: {sys.argv[0]} <vault_path> <astro_posts_path>", file=sys.stderr)
@@ -179,8 +318,6 @@ def main():
 
     posts.mkdir(parents=True, exist_ok=True)
 
-    # Derive astro project root and public/images/ from posts arg
-    # posts = <astro-root>/src/content/posts  →  astro-root = posts.parent.parent.parent
     astro_root = posts.parent.parent.parent
     public_images_dir = astro_root / 'public' / 'images'
     public_images_dir.mkdir(parents=True, exist_ok=True)
@@ -190,8 +327,7 @@ def main():
     print(f"Indexed {len(by_path)} image file(s) in vault.")
 
     # Pass 1: collect all publishable notes; build filename → slug map
-    # (excludes kind:home from being a wikilink target — no /posts/<slug> URL)
-    publishable = []  # list of dicts
+    publishable = []
     filename_to_slug = {}
 
     for md in vault.rglob('*.md'):
@@ -213,7 +349,6 @@ def main():
             'basename': basename, 'slug': slug,
         })
 
-        # Only non-home notes are wikilink TARGETS
         if fm.get('kind') != 'home':
             basename_lower = basename.lower()
             if basename_lower in filename_to_slug:
@@ -225,6 +360,7 @@ def main():
     print(f"Found {len(publishable)} publishable note(s).")
 
     # Pass 2: transform body content — image embeds, wikilinks, highlights
+    # (Phase F: 包一层 apply_protecting_code,fenced 和 inline code 不参与替换)
     backlinks = {}
     unresolved = []
     missing_images = []
@@ -234,19 +370,29 @@ def main():
 
     for item in publishable:
         title = item['fm'].get('title', item['basename'])
-        # 1) Image embeds: ![[file.png]] → ![alt](/images/...) and copy file
-        new_body = transform_image_embeds(
-            item['body'], item['slug'],
-            by_path, by_basename, public_images_dir,
-            missing_images, ambiguous_images, copied_images,
-        )
-        # 2) Note wikilinks: [[Note]] → [Note](/posts/<slug>)
-        new_body = transform_wikilinks(
-            new_body, item['slug'], str(title),
-            filename_to_slug, backlinks, unresolved,
-        )
-        # 3) Obsidian ==highlight== → <mark>highlight</mark>
-        new_body = re.sub(r'==(.+?)==', r'<mark>\1</mark>', new_body)
+        slug = item['slug']
+
+        def img_xform(text, _slug=slug):
+            return transform_image_embeds(
+                text, _slug, by_path, by_basename, public_images_dir,
+                missing_images, ambiguous_images, copied_images,
+            )
+
+        def wl_xform(text, _slug=slug, _title=str(title)):
+            return transform_wikilinks(
+                text, _slug, _title,
+                filename_to_slug, backlinks, unresolved,
+            )
+
+        def hl_xform(text):
+            return re.sub(r'==(.+?)==', r'<mark>\1</mark>', text)
+
+        new_body = apply_protecting_code(item['body'], img_xform, wl_xform, hl_xform)
+
+        # Phase D: 算 reading_time + last_modified,注入 fm
+        item['fm']['reading_time'] = compute_reading_time(item['body'])
+        item['fm']['last_modified'] = get_mtime_iso(item['md'])
+
         transformed.append({**item, 'new_body': new_body, 'title': str(title)})
 
     if copied_images:
@@ -287,7 +433,6 @@ def main():
         target_filenames.add(filename)
 
         incoming = backlinks.get(item['slug'], [])
-        # Dedupe by source slug
         seen = set()
         deduped = []
         for link in incoming:
@@ -303,15 +448,19 @@ def main():
         dest.write_text(new_text, encoding='utf-8')
         print(f"  + {filename}")
 
-    # Pass 4: remove stale files
+    # Pass 4: remove stale .md files
     existing_files = {p.name for p in posts.glob('*.md')}
     stale = existing_files - target_filenames
     for name in stale:
         (posts / name).unlink()
         print(f"  − removed {name}")
 
+    # Pass 5: cleanup stale images (Phase E)
+    cleanup_stale_images(posts, public_images_dir, astro_root)
+
     print("Sync complete.")
 
 
 if __name__ == '__main__':
+    _self_test()
     main()

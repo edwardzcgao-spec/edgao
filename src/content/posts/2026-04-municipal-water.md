@@ -4,6 +4,8 @@ date: 2026-04-15
 kind: essay
 publish: true
 description: Why water systems break in ways that look sudden but aren't.
+reading_time: 1
+last_modified: 2026-05-12
 ---
 
 > 占位文本 · 用你自己的 essay 替换。整篇文章只需要写正文 markdown,frontmatter 的 title / date / kind / description 已经在顶部。

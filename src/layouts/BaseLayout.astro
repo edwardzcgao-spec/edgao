@@ -18,7 +18,16 @@ const { title, description = 'Edward Gao — writing on history, institutions, a
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{title}</title>
   <meta name="description" content={description} />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <!-- Favicon 套件:SVG 优先(双主题感知),fallback 到多 size PNG -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" media="(prefers-color-scheme: light)" />
+  <link rel="icon" type="image/svg+xml" href="/favicon-dark.svg" media="(prefers-color-scheme: dark)" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+
+  <!-- RSS feed -->
+  <link rel="alternate" type="application/rss+xml" title="Edward Gao" href="/rss.xml" />
 
   <!-- Theme color (跟随 prefers-color-scheme,给 mobile Safari URL bar 染色) -->
   <meta name="theme-color" content="#F0EEE6" media="(prefers-color-scheme: light)" />

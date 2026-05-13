@@ -4,6 +4,8 @@ kind: essay
 publish: true
 date: 2026-05-12
 slug: meiji-continuity
+reading_time: 51
+last_modified: 2026-05-12
 incoming_links:
   - slug: "Home"
     title: "int"

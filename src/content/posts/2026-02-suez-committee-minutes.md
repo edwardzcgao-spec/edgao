@@ -4,6 +4,8 @@ date: 2026-02-20
 kind: notes
 publish: true
 description: What the British cabinet minutes show that the memoirs don't.
+reading_time: 1
+last_modified: 2026-05-12
 ---
 
 > 占位文本 · 用你的笔记替换。

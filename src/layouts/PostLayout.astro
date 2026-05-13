@@ -6,15 +6,39 @@ interface Props {
   date: Date;
   kind: 'essay' | 'notes' | 'home';
   description?: string;
+  readingTime?: number;
+  lastModified?: Date;
   incomingLinks?: Array<{ slug: string; title: string }>;
 }
 
-const { title, date, kind, description, incomingLinks = [] } = Astro.props;
+const {
+  title,
+  date,
+  kind,
+  description,
+  readingTime,
+  lastModified,
+  incomingLinks = [],
+} = Astro.props;
 
 const formattedDate = date.toLocaleDateString('en-US', {
   year: 'numeric',
   month: 'short',
 });
+
+// last_modified 跟 date 差 ≥ 7 天才显示
+const showLastModified =
+  lastModified instanceof Date &&
+  !isNaN(lastModified.getTime()) &&
+  Math.abs(lastModified.getTime() - date.getTime()) / 86400000 >= 7;
+
+const formattedLastModified = showLastModified
+  ? lastModified!.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
+  : null;
 
 // Cap at 10, dedupe by slug
 const uniqueBacklinks = Array.from(
@@ -27,11 +51,20 @@ const uniqueBacklinks = Array.from(
     <header class="prose__header">
       <p class="prose__kind">{kind}</p>
       <h1 class="prose__title">{title}</h1>
-      <p class="prose__date">{formattedDate}</p>
+      <p class="prose__date">
+        {formattedDate}
+        {readingTime && <> · {readingTime} min read</>}
+      </p>
     </header>
     <div class="prose__body">
       <slot />
     </div>
+
+    {formattedLastModified && (
+      <p class="prose__last-modified">
+        last updated · {formattedLastModified}
+      </p>
+    )}
 
     {uniqueBacklinks.length > 0 && (
       <aside class="backlinks">

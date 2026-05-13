@@ -1,4 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <rect width="32" height="32" fill="#F0EEE6"/>
-  <text x="16" y="22" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="20" font-weight="800" text-anchor="middle" fill="#1F1F1E" letter-spacing="-1">E</text>
+  <text
+    x="16" y="23"
+    font-family="'Iowan Old Style', 'Source Serif Pro', Georgia, serif"
+    font-style="italic"
+    font-weight="500"
+    font-size="22"
+    text-anchor="middle"
+    fill="#1F1F1E"
+    letter-spacing="-0.5">eg</text>
 </svg>

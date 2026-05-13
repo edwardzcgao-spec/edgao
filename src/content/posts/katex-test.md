@@ -4,6 +4,8 @@ kind: notes
 date: 2026-05-13
 publish: true
 slug: katex-test
+reading_time: 2
+last_modified: 2026-05-13
 ---
 
 # KaTeX 数学公式测试

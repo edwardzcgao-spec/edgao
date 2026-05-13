@@ -26,3 +26,6 @@ pnpm-debug.log*
 # editor
 .vscode/
 .idea/
+
+# sync-from-vault.py 把 stale 图片移到这里(人工 review 后删)
+public/_trash/

@@ -10,6 +10,8 @@ const posts = defineCollection({
     description: z.string().optional(),
     publish: z.boolean().default(false),
     slug: z.string().optional(),
+    reading_time: z.number().optional(),
+    last_modified: z.coerce.date().optional(),
     incoming_links: z.array(z.object({
       slug: z.string(),
       title: z.string(),

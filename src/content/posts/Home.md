@@ -3,6 +3,8 @@ publish: true
 title: int
 date: 2026-05-12
 kind: home
+reading_time: 1
+last_modified: 2026-05-12
 ---
 
 Hi! I'm Ed. If you see this page, then probably I would like to share some content to you, so feel free to explore! Hope you can discover something useful.

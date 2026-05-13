@@ -4,6 +4,8 @@ date: 2025-12-08
 kind: essay
 publish: true
 description: Distributed authorship and the limits of intentional design.
+reading_time: 1
+last_modified: 2026-05-12
 ---
 
 > 占位文本 · 用你的 essay 替换。

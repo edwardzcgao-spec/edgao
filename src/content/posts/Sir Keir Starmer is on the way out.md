@@ -9,6 +9,8 @@ tags:
 publish: true
 date: 2026-05-12
 kind: notes
+reading_time: 3
+last_modified: 2026-05-12
 ---
 
 ## Pity his successor
