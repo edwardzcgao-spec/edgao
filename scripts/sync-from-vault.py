@@ -38,8 +38,40 @@ CODE_SEGMENT_RE = re.compile(
 USED_IMAGE_RE = re.compile(r'!\[[^\]]*\]\((/images/[^)\s]+)\)')
 
 
+def _unquote(s):
+    if (s.startswith('"') and s.endswith('"')) or \
+       (s.startswith("'") and s.endswith("'")):
+        return s[1:-1]
+    return s
+
+
+def _scalarize(value):
+    """Strip quotes; coerce 'true'/'false' to bool;尝试 int(用于 series_order)。"""
+    value = _unquote(value)
+    if value.lower() == 'true':
+        return True
+    if value.lower() == 'false':
+        return False
+    # int 转换:只对纯数字串
+    if value and (value[0] == '-' or value[0].isdigit()):
+        try:
+            return int(value)
+        except ValueError:
+            pass
+    return value
+
+
 def parse_frontmatter(text):
-    """Return (fm_dict, body) or (None, text) if no frontmatter."""
+    """Return (fm_dict, body) or (None, text) if no frontmatter.
+
+    Supports:
+    - scalar: `key: value`(string / bool / int)
+    - YAML list:
+        key:
+          - item1
+          - item2
+    Does NOT support: nested dict, anchors, multi-line strings, flow lists `[a,b]`.
+    """
     if not text.startswith('---\n'):
         return None, text
     end = text.find('\n---', 4)
@@ -49,42 +81,81 @@ def parse_frontmatter(text):
     rest = text[end + 4:].lstrip('\n')
 
     result = {}
+    current_key = None     # 当 list mode 时记着归属哪个 key
+    current_list = None
+
     for line in block.split('\n'):
-        if ':' not in line:
+        if not line.strip():
             continue
-        # Skip list-style lines (starts with whitespace + '-')
-        if line.lstrip().startswith('-'):
+        stripped = line.lstrip()
+        # List item:`- value`
+        if stripped.startswith('- ') and current_key is not None:
+            item = _unquote(stripped[2:].strip())
+            current_list.append(item)
+            continue
+        if stripped == '-' and current_key is not None:
+            # 空 list item,跳过
+            continue
+
+        # 非 list item → 关闭 list mode
+        current_key = None
+        current_list = None
+
+        if ':' not in line:
             continue
         key, _, value = line.partition(':')
         key = key.strip()
         value = value.strip()
-        if (value.startswith('"') and value.endswith('"')) or \
-           (value.startswith("'") and value.endswith("'")):
-            value = value[1:-1]
-        if value.lower() == 'true':
-            value = True
-        elif value.lower() == 'false':
-            value = False
-        result[key] = value
+
+        # key 后无值 → 准备进入 list mode(下一行是 `- ...`)
+        if value == '':
+            current_key = key
+            current_list = []
+            result[key] = current_list
+            continue
+
+        result[key] = _scalarize(value)
     return result, rest
 
 
-def serialize_frontmatter(fm, incoming_links):
-    """Write frontmatter dict back to YAML, append incoming_links list if any."""
+def _yaml_scalar(value):
+    """格式化一个 scalar 值,必要时加 quote。"""
+    if isinstance(value, bool):
+        return 'true' if value else 'false'
+    if isinstance(value, (int, float)):
+        return str(value)
+    s = str(value)
+    if ':' in s or '#' in s or s.startswith('[') or s.startswith('-'):
+        escaped = s.replace('"', '\\"')
+        return f'"{escaped}"'
+    return s
+
+
+def serialize_frontmatter(fm, incoming_links, related_posts=None):
+    """Write frontmatter dict back to YAML.
+    incoming_links / related_posts 是结构化 list[dict],单独序列化。
+    fm 里的 list[str](如 tags)用多行 YAML list 输出。"""
     lines = ['---']
     for key, value in fm.items():
-        if key == 'incoming_links':
+        if key in ('incoming_links', 'related_posts'):
             continue  # written separately
-        if isinstance(value, bool):
-            lines.append(f'{key}: {"true" if value else "false"}')
-        elif isinstance(value, str):
-            if ':' in value or '#' in value or value.startswith('['):
-                escaped = value.replace('"', '\\"')
-                lines.append(f'{key}: "{escaped}"')
-            else:
-                lines.append(f'{key}: {value}')
+        if isinstance(value, list):
+            if not value:
+                # 空 list 不输出,避免污染 git diff
+                continue
+            lines.append(f'{key}:')
+            for item in value:
+                lines.append(f'  - {_yaml_scalar(item)}')
         else:
-            lines.append(f'{key}: {value}')
+            lines.append(f'{key}: {_yaml_scalar(value)}')
+
+    if related_posts:
+        lines.append('related_posts:')
+        for rp in related_posts:
+            slug_str = str(rp['slug']).replace('"', '\\"')
+            title_str = str(rp['title']).replace('"', '\\"')
+            lines.append(f'  - slug: "{slug_str}"')
+            lines.append(f'    title: "{title_str}"')
 
     if incoming_links:
         lines.append('incoming_links:')
@@ -282,6 +353,62 @@ def cleanup_stale_images(posts_dir, public_images_dir, astro_root):
 # Phase F: self-test (跑在 main() 之前,失败 abort)
 # ---------------------------------------------------------------------------
 
+def normalize_tag(t):
+    """lowercase + trim;CJK 字符不受 lowercase 影响"""
+    return str(t).strip().lower()
+
+
+def compute_related(item, all_items, backlinks):
+    """对一篇文章算 related_posts。
+    Weights:
+      - 同 series:+10
+      - 共享 tag 数:+3 per tag
+      - 当前 body 出站 link 到 other(transform 后 markdown):+2
+      - other backlink 到当前(已在 backlinks dict 里):+2
+    返回 top 5 (score > 0)。"""
+    my_tags = set(item['fm'].get('tags') or [])
+    my_series = item['fm'].get('series')
+    my_slug = item['slug']
+    my_body = item.get('new_body', '')
+
+    # other → set of slugs that backlink to me
+    incoming_to_me = {bl['slug'] for bl in backlinks.get(my_slug, [])}
+
+    scores = []
+    for other in all_items:
+        if other['slug'] == my_slug:
+            continue
+        if other['fm'].get('kind') == 'home':
+            continue
+
+        s = 0
+        if my_series and other['fm'].get('series') == my_series:
+            s += 10
+
+        other_tags = set(other['fm'].get('tags') or [])
+        s += 3 * len(my_tags & other_tags)
+
+        # 当前文章 transform 后的 body 是否引用 other(`](/posts/<other-slug>)` substring)
+        if f"](/posts/{other['slug']})" in my_body:
+            s += 2
+
+        # other 是否反向引用过当前文章
+        if other['slug'] in incoming_to_me:
+            s += 2
+
+        if s > 0:
+            scores.append((s, other))
+
+    scores.sort(key=lambda x: -x[0])
+    return [
+        {
+            'slug': o['slug'],
+            'title': str(o['fm'].get('title', o['basename'])),
+        }
+        for _, o in scores[:5]
+    ]
+
+
 def _self_test():
     sample = (
         "Prose with [[Note-A]] and ==hi==.\n\n"
@@ -301,12 +428,39 @@ def _self_test():
     assert '![[image.png]]' in out[1][1]
     assert '[[Note-C]]' in out[3][1]
 
-    # Reading time:200 EN words → 1 min
+    # Reading time
     assert compute_reading_time('word ' * 200) == 1
-    # 300 CJK chars → 1 min
     assert compute_reading_time('字' * 300) == 1
-    # 600 CJK chars → 2 min
     assert compute_reading_time('字' * 600) == 2
+
+    # Multi-line YAML list parsing (Phase 1)
+    sample_yaml = (
+        "---\n"
+        "title: Test\n"
+        "tags:\n"
+        "  - history\n"
+        "  - economics\n"
+        "  - \"quoted: value\"\n"
+        "publish: true\n"
+        "series_order: 2\n"
+        "---\n"
+        "body here\n"
+    )
+    fm, body = parse_frontmatter(sample_yaml)
+    assert fm['tags'] == ['history', 'economics', 'quoted: value'], f"tags = {fm['tags']!r}"
+    assert fm['title'] == 'Test'
+    assert fm['publish'] is True
+    assert fm['series_order'] == 2, f"series_order = {fm['series_order']!r}"
+    assert body == 'body here\n'
+
+    # Round-trip serialize
+    out_text = serialize_frontmatter(fm, [])
+    assert 'tags:\n  - history\n  - economics' in out_text, f"serialize output:\n{out_text}"
+    assert 'series_order: 2' in out_text
+
+    # Tag normalize
+    assert normalize_tag('  History ') == 'history'
+    assert normalize_tag('历史') == '历史'
 
 
 def main():
@@ -402,6 +556,18 @@ def main():
         item['fm']['reading_time'] = compute_reading_time(item['body'])
         item['fm']['last_modified'] = get_mtime_iso(item['md'])
 
+        # Wave 2 Phase 3: normalize tags(lowercase + trim,中文原样,dedupe 保序)
+        raw_tags = item['fm'].get('tags')
+        if isinstance(raw_tags, list):
+            seen_t = set()
+            clean = []
+            for t in raw_tags:
+                n = normalize_tag(t)
+                if n and n not in seen_t:
+                    seen_t.add(n)
+                    clean.append(n)
+            item['fm']['tags'] = clean
+
         transformed.append({**item, 'new_body': new_body, 'title': str(title)})
 
     if copied_images:
@@ -435,6 +601,10 @@ def main():
             print(f"  ... and {len(unresolved) - 20} more", file=sys.stderr)
         print()
 
+    # Pass 2.5 (Wave 2 Phase 5): compute related_posts using series + tags + backlinks
+    for item in transformed:
+        item['related_posts'] = compute_related(item, transformed, backlinks)
+
     # Pass 3: write output files (only if content changed)
     target_filenames = set()
     for item in transformed:
@@ -449,7 +619,9 @@ def main():
                 seen.add(link['slug'])
                 deduped.append(link)
 
-        new_text = serialize_frontmatter(item['fm'], deduped) + '\n\n' + item['new_body']
+        new_text = serialize_frontmatter(
+            item['fm'], deduped, related_posts=item.get('related_posts'),
+        ) + '\n\n' + item['new_body']
         dest = posts / filename
 
         if dest.exists() and dest.read_text(encoding='utf-8') == new_text:

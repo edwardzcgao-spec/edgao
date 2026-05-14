@@ -1,6 +1,10 @@
 ---
 // Hero.astro
-// 主页顶部的 hero 区域:大宣言 + 元信息 + nav
+// 主页顶部的 hero 区域:大宣言 + 元信息 + 两层 nav
+//
+// nav 结构:
+//   primary row(ink / 16px / 600):writing · notes · about
+//   secondary row(muted / 14px / 500):maps · tags · series · rss
 interface Props {
   sentence: string;
   byline?: string;
@@ -19,13 +23,22 @@ const {
     <p class="hero__meta">{byline}</p>
     <div class="hero__rule"></div>
     <nav class="hero__nav" aria-label="Primary">
-      <a href="/writing">writing</a>
-      <span class="dot">·</span>
-      <a href="/notes">notes</a>
-      <span class="dot">·</span>
-      <a href="/about">about</a>
-      <span class="dot">·</span>
-      <a href="/rss.xml">rss</a>
+      <div class="hero__nav-row hero__nav-row--primary">
+        <a href="/writing">writing</a>
+        <span class="dot" aria-hidden="true">·</span>
+        <a href="/notes">notes</a>
+        <span class="dot" aria-hidden="true">·</span>
+        <a href="/about">about</a>
+      </div>
+      <div class="hero__nav-row hero__nav-row--secondary">
+        <a href="/maps">maps</a>
+        <span class="dot" aria-hidden="true">·</span>
+        <a href="/tags">tags</a>
+        <span class="dot" aria-hidden="true">·</span>
+        <a href="/series">series</a>
+        <span class="dot" aria-hidden="true">·</span>
+        <a href="/rss.xml">rss</a>
+      </div>
     </nav>
   </div>
 </section>

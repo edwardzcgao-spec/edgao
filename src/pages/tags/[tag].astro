@@ -1,0 +1,36 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleList from '../../components/ArticleList.astro';
+
+export async function getStaticPaths() {
+  const all = await getCollection(
+    'posts',
+    ({ data }) => data.publish && data.kind !== 'home'
+  );
+  const map = new Map<string, typeof all>();
+  for (const p of all) {
+    for (const t of (p.data.tags ?? [])) {
+      if (!map.has(t)) map.set(t, []);
+      map.get(t)!.push(p);
+    }
+  }
+  return [...map.entries()].map(([tag, posts]) => ({
+    params: { tag },
+    props: {
+      tag,
+      posts: posts.sort(
+        (a, b) => b.data.date.getTime() - a.data.date.getTime()
+      ),
+    },
+  }));
+}
+
+const { tag, posts } = Astro.props;
+---
+
+<BaseLayout title={`Tag: ${tag} — Edward Gao`}>
+  <div data-pagefind-ignore>
+    <ArticleList label={`tagged · ${tag}`} posts={posts} />
+  </div>
+</BaseLayout>

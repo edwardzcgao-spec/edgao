@@ -1,5 +1,6 @@
 ---
-tags: 
+tags:
+  - tcrcc
 publish: true
 title: Small-States-Independence-Index
 kind: notes
@@ -7,6 +8,9 @@ date: 2026-05-13
 slug: SSII
 reading_time: 12
 last_modified: 2026-05-13
+related_posts:
+  - slug: "Official-Language-Policy"
+    title: "Official-Language-Policy"
 ---
 
 # Small States Independence Index

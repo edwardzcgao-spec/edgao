@@ -80,30 +80,50 @@ html, body {
   margin-bottom: 22px;
 }
 
+/* 两层 nav:primary(大/重/ink)+ secondary(小/轻/muted) */
 .hero__nav {
   display: flex;
-  align-items: center;
-  gap: 18px;
-  font-size: 16px;
-  color: var(--ink);
-  font-weight: 600;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
 }
 
-.hero__nav a {
-  color: var(--ink);
+.hero__nav-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.hero__nav-row a {
   text-decoration: none;
   transition: color 0.15s ease;
 }
 
-.hero__nav a:hover {
-  color: var(--muted);
-}
-
-.hero__nav .dot {
-  color: var(--muted);
+.hero__nav-row .dot {
   user-select: none;
   font-weight: 500;
 }
+
+.hero__nav-row--primary {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.hero__nav-row--primary a { color: var(--ink); }
+.hero__nav-row--primary a:hover { color: var(--muted); }
+.hero__nav-row--primary .dot { color: var(--muted); }
+
+.hero__nav-row--secondary {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.hero__nav-row--secondary a { color: var(--muted); }
+.hero__nav-row--secondary a:hover { color: var(--ink); }
+.hero__nav-row--secondary .dot { color: var(--muted); }
 
 /* =========================================================================
    Writing list
@@ -990,4 +1010,241 @@ html.dark .katex * {
   text-transform: lowercase;
   margin: 56px 0 0 0;
   text-align: center;
+}
+
+/* =========================================================================
+   Wave 2 — Tags / Series / Related / Index pages
+   ========================================================================= */
+
+/* Tag chips(显示在文章底部) */
+.tags-list {
+  list-style: none;
+  padding: 0;
+  margin: 48px 0 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.tag-chip {
+  margin: 0;
+}
+
+.tag-chip a {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 3px 10px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.tag-chip a:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+/* Series — header byline 下方的 "Part N of <Series>" */
+.prose__series {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  margin: 14px 0 0 0;
+}
+
+.prose__series a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.15s ease;
+}
+
+.prose__series a:hover {
+  text-decoration-color: var(--ink);
+}
+
+/* Series prev/next 导航(body 之后) */
+.series-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 24px;
+  margin-top: 72px;
+  padding-top: 28px;
+  border-top: 1px solid var(--rule);
+}
+
+.series-nav__slot {
+  flex: 1;
+  display: flex;
+  min-width: 0;
+}
+
+.series-nav__slot--next {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.series-nav__slot a {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0;
+  text-decoration: none;
+  color: var(--ink);
+  min-width: 0;
+}
+
+.series-nav__label {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+
+.series-nav__title {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.15s ease;
+}
+
+.series-nav__slot a:hover .series-nav__title {
+  text-decoration-color: var(--ink);
+}
+
+@media (max-width: 720px) {
+  .series-nav {
+    flex-direction: column;
+    gap: 24px;
+  }
+  .series-nav__slot--next {
+    text-align: left;
+  }
+  .series-nav__slot--next a {
+    align-items: flex-start;
+  }
+}
+
+/* Related posts —— 视觉跟 backlinks 同模式 */
+.related {
+  margin-top: 56px;
+  padding-top: 32px;
+  border-top: 1px solid var(--rule);
+}
+
+.related__heading {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  margin: 0 0 16px 0;
+}
+
+.related__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.related__list li {
+  margin-bottom: 10px;
+}
+
+.related__list a {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule);
+  transition: border-color 0.15s ease;
+}
+
+.related__list a:hover {
+  border-bottom-color: var(--ink);
+}
+
+/* Index pages(/tags, /series)— 跟 .writing list 一个调性 */
+.index-page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 120px var(--pad-x) 160px;
+}
+
+.index-page__label {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  margin: 0 0 56px 0;
+  font-family: var(--font-sans);
+}
+
+.index-page__empty {
+  font-family: var(--font-serif);
+  color: var(--muted);
+  font-style: italic;
+  margin: 0;
+}
+
+.index-page__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.index-page__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 24px;
+  padding: 18px 0;
+  border-top: 1px solid var(--rule);
+}
+
+.index-page__row:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+
+.index-page__row a {
+  font-family: var(--font-serif);
+  font-size: clamp(20px, 1.8vw, 26px);
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+  letter-spacing: -0.01em;
+  transition: color 0.15s ease;
+}
+
+.index-page__row a:hover {
+  color: var(--muted);
+}
+
+.index-page__count {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }

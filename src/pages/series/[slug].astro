@@ -1,0 +1,37 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleList from '../../components/ArticleList.astro';
+import { slugifySeries } from '../../utils/slug';
+
+export async function getStaticPaths() {
+  const all = await getCollection(
+    'posts',
+    ({ data }) => data.publish && data.kind !== 'home' && !!data.series
+  );
+  const map = new Map<string, typeof all>();
+  for (const p of all) {
+    const s = p.data.series!;
+    if (!map.has(s)) map.set(s, []);
+    map.get(s)!.push(p);
+  }
+  return [...map.entries()].map(([series, posts]) => ({
+    params: { slug: slugifySeries(series) },
+    props: {
+      series,
+      posts: posts.sort(
+        (a, b) =>
+          (a.data.series_order ?? 0) - (b.data.series_order ?? 0)
+      ),
+    },
+  }));
+}
+
+const { series, posts } = Astro.props;
+---
+
+<BaseLayout title={`Series: ${series} — Edward Gao`}>
+  <div data-pagefind-ignore>
+    <ArticleList label={`series · ${series}`} posts={posts} />
+  </div>
+</BaseLayout>

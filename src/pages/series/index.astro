@@ -1,0 +1,37 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { slugifySeries } from '../../utils/slug';
+
+const all = await getCollection(
+  'posts',
+  ({ data }) => data.publish && data.kind !== 'home' && !!data.series
+);
+const map = new Map<string, typeof all>();
+for (const p of all) {
+  const s = p.data.series!;
+  if (!map.has(s)) map.set(s, []);
+  map.get(s)!.push(p);
+}
+// 按文章数 desc + 字母 tiebreak
+const sorted = [...map.entries()].sort(
+  (a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0])
+);
+---
+
+<BaseLayout title="Series — Edward Gao">
+  <section class="index-page" data-pagefind-ignore>
+    <p class="index-page__label">series</p>
+    {sorted.length === 0 && (
+      <p class="index-page__empty">no series yet.</p>
+    )}
+    <ul class="index-page__list">
+      {sorted.map(([name, posts]) => (
+        <li class="index-page__row">
+          <a href={`/series/${slugifySeries(name)}`}>{name}</a>
+          <span class="index-page__count">{posts.length}</span>
+        </li>
+      ))}
+    </ul>
+  </section>
+</BaseLayout>

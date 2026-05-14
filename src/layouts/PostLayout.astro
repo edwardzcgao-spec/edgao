@@ -1,15 +1,34 @@
 ---
 import BaseLayout from './BaseLayout.astro';
+import { slugifySeries } from '../utils/slug';
+
+interface SeriesNeighbor {
+  id: string;
+  title: string;
+}
 
 interface Props {
   title: string;
   date: Date;
-  kind: 'essay' | 'notes' | 'home';
+  kind: 'essay' | 'notes' | 'home' | 'moc';
   description?: string;
   readingTime?: number;
   lastModified?: Date;
+  tags?: string[];
+  series?: string;
+  seriesOrder?: number;
+  prevInSeries?: SeriesNeighbor | null;
+  nextInSeries?: SeriesNeighbor | null;
+  relatedPosts?: Array<{ slug: string; title: string }>;
   incomingLinks?: Array<{ slug: string; title: string }>;
 }
+
+const KIND_LABEL: Record<string, string> = {
+  essay: 'essay',
+  notes: 'notes',
+  home: 'home',
+  moc: 'map of content',
+};
 
 const {
   title,
@@ -18,6 +37,12 @@ const {
   description,
   readingTime,
   lastModified,
+  tags,
+  series,
+  seriesOrder,
+  prevInSeries,
+  nextInSeries,
+  relatedPosts,
   incomingLinks = [],
 } = Astro.props;
 
@@ -40,30 +65,58 @@ const formattedLastModified = showLastModified
     })
   : null;
 
+const seriesSlug = series ? slugifySeries(series) : '';
+
 // Cap at 10, dedupe by slug
 const uniqueBacklinks = Array.from(
   new Map(incomingLinks.map(l => [l.slug, l])).values()
 ).slice(0, 10);
+
+const uniqueRelated = relatedPosts
+  ? Array.from(new Map(relatedPosts.map(r => [r.slug, r])).values()).slice(0, 5)
+  : [];
 ---
 
 <BaseLayout title={`${title} — Edward Gao`} description={description}>
   <article class="prose">
     <header class="prose__header">
-      <p class="prose__kind">{kind}</p>
+      <p class="prose__kind">{KIND_LABEL[kind] ?? kind}</p>
       <h1 class="prose__title">{title}</h1>
       <p class="prose__date">
         {formattedDate}
         {readingTime && <> · {readingTime} min read</>}
       </p>
+      {series && (
+        <p class="prose__series">
+          Part {seriesOrder ?? '?'} of{' '}
+          <a href={`/series/${seriesSlug}`}>{series}</a>
+        </p>
+      )}
     </header>
+
     <div class="prose__body">
       <slot />
     </div>
 
-    {formattedLastModified && (
-      <p class="prose__last-modified">
-        last updated · {formattedLastModified}
-      </p>
+    {(prevInSeries || nextInSeries) && (
+      <nav class="series-nav" aria-label="series navigation">
+        <div class="series-nav__slot series-nav__slot--prev">
+          {prevInSeries && (
+            <a href={`/posts/${prevInSeries.id}`}>
+              <span class="series-nav__label">← previous in series</span>
+              <span class="series-nav__title">{prevInSeries.title}</span>
+            </a>
+          )}
+        </div>
+        <div class="series-nav__slot series-nav__slot--next">
+          {nextInSeries && (
+            <a href={`/posts/${nextInSeries.id}`}>
+              <span class="series-nav__label">next in series →</span>
+              <span class="series-nav__title">{nextInSeries.title}</span>
+            </a>
+          )}
+        </div>
+      </nav>
     )}
 
     {uniqueBacklinks.length > 0 && (
@@ -77,6 +130,35 @@ const uniqueBacklinks = Array.from(
           ))}
         </ul>
       </aside>
+    )}
+
+    {uniqueRelated.length > 0 && (
+      <aside class="related">
+        <h2 class="related__heading">related</h2>
+        <ul class="related__list">
+          {uniqueRelated.map(r => (
+            <li>
+              <a href={`/posts/${r.slug}`}>{r.title}</a>
+            </li>
+          ))}
+        </ul>
+      </aside>
+    )}
+
+    {tags && tags.length > 0 && (
+      <ul class="tags-list" aria-label="tags">
+        {tags.map(t => (
+          <li class="tag-chip">
+            <a href={`/tags/${encodeURIComponent(t)}`}>{t}</a>
+          </li>
+        ))}
+      </ul>
+    )}
+
+    {formattedLastModified && (
+      <p class="prose__last-modified">
+        last updated · {formattedLastModified}
+      </p>
     )}
 
     <a href="/" class="prose__back">← back</a>

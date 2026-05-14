@@ -1,0 +1,19 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleList from '../../components/ArticleList.astro';
+
+const mocs = await getCollection(
+  'posts',
+  ({ data }) => data.publish && data.kind === 'moc'
+);
+const sorted = mocs.sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
+---
+
+<BaseLayout title="Maps of Content — Edward Gao">
+  <div data-pagefind-ignore>
+    <ArticleList label="maps of content" posts={sorted} />
+  </div>
+</BaseLayout>

@@ -3,17 +3,40 @@ import { getCollection, render } from 'astro:content';
 import PostLayout from '../../layouts/PostLayout.astro';
 
 export async function getStaticPaths() {
-  const posts = await getCollection(
+  const all = await getCollection(
     'posts',
     ({ data }) => data.publish && data.kind !== 'home'
   );
-  return posts.map((post) => ({
-    params: { slug: post.id },
-    props: { post },
-  }));
+
+  return all.map((post) => {
+    // 同 series 的兄弟,按 series_order 升序,算 prev/next
+    let prevInSeries = null;
+    let nextInSeries = null;
+    if (post.data.series) {
+      const siblings = all
+        .filter((p) => p.data.series === post.data.series)
+        .sort(
+          (a, b) =>
+            (a.data.series_order ?? 0) - (b.data.series_order ?? 0)
+        );
+      const idx = siblings.findIndex((p) => p.id === post.id);
+      if (idx > 0) {
+        const p = siblings[idx - 1];
+        prevInSeries = { id: p.id, title: p.data.title };
+      }
+      if (idx >= 0 && idx < siblings.length - 1) {
+        const n = siblings[idx + 1];
+        nextInSeries = { id: n.id, title: n.data.title };
+      }
+    }
+    return {
+      params: { slug: post.id },
+      props: { post, prevInSeries, nextInSeries },
+    };
+  });
 }
 
-const { post } = Astro.props;
+const { post, prevInSeries, nextInSeries } = Astro.props;
 const { Content } = await render(post);
 ---
 
@@ -24,6 +47,12 @@ const { Content } = await render(post);
   description={post.data.description}
   readingTime={post.data.reading_time}
   lastModified={post.data.last_modified}
+  tags={post.data.tags}
+  series={post.data.series}
+  seriesOrder={post.data.series_order}
+  prevInSeries={prevInSeries}
+  nextInSeries={nextInSeries}
+  relatedPosts={post.data.related_posts}
   incomingLinks={post.data.incoming_links}
 >
   <Content />

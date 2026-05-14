@@ -1,11 +1,13 @@
 ---
 title: Sir Keir Starmer is on the way out
 source: "https://www.economist.com/britain/2026/05/12/sir-keir-starmer-is-on-the-way-out"
-author: 
+author:
+  - "[[The Economist]]"
 published: 2026-05-12
 created: 2026-05-12
 description: Pity his successor  | Britain
-tags: 
+tags:
+  - clippings
 publish: true
 date: 2026-05-12
 kind: notes

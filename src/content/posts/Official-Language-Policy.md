@@ -1,11 +1,20 @@
 ---
-tags: 
+tags:
+  - tcrcc
+  - gellner
+  - concept
+  - nationalism
 publish: true
 date: 2026-05-12
 title: Official-Language-Policy
 kind: notes
 reading_time: 11
 last_modified: 2026-05-12
+related_posts:
+  - slug: "SSII"
+    title: "Small-States-Independence-Index"
+  - slug: "111"
+    title: "111a"
 incoming_links:
   - slug: "111"
     title: "111a"
